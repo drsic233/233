@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melody · 个人主页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei",sans-serif;
+        }
+
+        /* 自定义音符鼠标 */
+        body {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><text x='0' y='26' font-size='24' fill='%23f1f1f1'>♪</text></svg>") 16 16, auto;
+        }
+
+        a, button, .card-link, .card, .music-rest-icon {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><text x='0' y='32' font-size='30' fill='%23ffffff'>♫</text></svg>") 20 20, pointer;
+        }
+
+        input, textarea {
+            cursor: text;
+        }
+
+        body {
+            background-color: #0a0a0a;
+            background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 600 300'><g fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1'><line x1='0' y1='60' x2='600' y2='60'/><line x1='0' y1='75' x2='600' y2='75'/><line x1='0' y1='90' x2='600' y2='90'/><line x1='0' y1='105' x2='600' y2='105'/><line x1='0' y1='120' x2='600' y2='120'/><line x1='0' y1='180' x2='600' y2='180'/><line x1='0' y1='195' x2='600' y2='195'/><line x1='0' y1='210' x2='600' y2='210'/><line x1='0' y1='225' x2='600' y2='225'/><line x1='0' y1='240' x2='600' y2='240'/></g><g fill='rgba(255,255,255,0.07)' font-size='28'><text x='80' y='92'>♩</text><text x='160' y='78'>♪</text><text x='240' y='110'>♫</text><text x='320' y='86'>♬</text><text x='400' y='104'>♩</text><text x='480' y='90'>♪</text><text x='120' y='212'>♫</text><text x='220' y='198'>♪</text><text x='340' y='220'>♩</text><text x='440' y='206'>♬</text></g></svg>");
+            background-size: 100px 100px, 600px 300px;
+            background-repeat: repeat, repeat;
+            background-position: top left, center;
+            color: #f1f1f1;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 浮动音符容器 */
+        .note-container {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .note {
+            position: absolute;
+            color: #cccccc;
+            font-size: 24px;
+            opacity: 0.4;
+            animation: float 12s linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.5;
+            }
+
+            90% {
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 42px;
+            letter-spacing: 6px;
+            font-weight: 300;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        /* ==========休止符图标样式========== */
+        .music-rest-icon {
+            font-size: 36px;
+            color: #aaa;
+            margin-top: 16px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+            .music-rest-icon:hover {
+                color: #fff;
+                text-shadow: 0 0 10px rgba(255,255,255,0.4);
+                transform: scale(1.08);
+            }
+
+            .music-rest-icon.playing {
+                color: #fff;
+                text-shadow: 0 0 12px rgba(255,255,255,0.5);
+            }
+
+        section {
+            margin-bottom: 70px;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            h2::after {
+                content: "";
+                flex: 1;
+                height: 1px;
+                background: #333;
+            }
+
+        p {
+            line-height: 1.8;
+            color: #c5c5c5;
+            font-size: 16px;
+        }
+
+        /* 作品卡片 */
+        .card-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .card {
+            border: 1px solid #2b2b2b;
+            padding: 24px;
+            background: rgba(255,255,255,0.02);
+            transition: 0.3s ease;
+        }
+
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+            .card-link:hover .card {
+                border-color: #fff;
+                background: rgba(255,255,255,0.08);
+                transform: translateY(-4px);
+            }
+
+        .card h3 {
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 100px;
+            padding-top: 30px;
+            border-top: 1px solid #333;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 音乐播放器样式 */
+        .audio-box {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        #musicBtn {
+            background: transparent;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 10px 24px;
+            font-size: 16px;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+            #musicBtn:hover {
+                border-color: #fff;
+                color: #fff;
+            }
+    </style>
+</head>
+<body>
+    <!-- 音符动画层 -->
+    <div class="note-container">
+        <div class="note" style="left:10%;animation-delay:0s;">♪</div>
+        <div class="note" style="left:25%;animation-delay:2s;">♫</div>
+        <div class="note" style="left:40%;animation-delay:4s;">♩</div>
+        <div class="note" style="left:55%;animation-delay:1s;">♪</div>
+        <div class="note" style="left:70%;animation-delay:5s;">♬</div>
+        <div class="note" style="left:85%;animation-delay:3s;">♫</div>
+        <div class="note" style="left:18%;animation-delay:7s;">♩</div>
+        <div class="note" style="left:60%;animation-delay:6s;">♪</div>
+    </div>
+
+    <div class="wrap">
+        <header>
+            <h1>Melody</h1>
+            <p class="subtitle">音符 · 思绪 · 插画 / 创作主页</p>
+            <!-- 休止符图标 𝄽 四分休止符 -->
+            <div class="music-rest-icon" id="restIcon">𝄽</div>
+        </header>
+
+        <!-- 音乐播放器 -->
+        <div class="audio-box">
+            <audio id="bgMusic" preload="auto">
+                <source src="music.mp3" type="audio/mpeg">
+                你的浏览器不支持音频播放
+
+                <button id="musicBtn">♪ 播放音乐</button>
+        </div>
+
+        <section>
+            <h2>关于我</h2>
+            <p>
+                黑白线条里藏着旋律，喜欢动漫插画、音乐与故事创作。<br>
+                这里是我的个人小空间，记录手绘、随笔与灵感。每一段音符，都是一段短暂的温柔。
+            </p>
+        </section>
+
+        <section>
+            <h2>作品</h2>
+            <div class="card-group">
+                <a class="card-link" href="sketch.html">
+                    <div class="card">
+                        <h3>速写集</h3>
+                        <p>动漫人物黑白线稿，安静的瞬间</p>
+                    </div>
+                </a>
+                <a class="card-link" href="musicEssay.html">
+                    <div class="card">
+                        <h3>音乐随笔</h3>
+                        <p>听歌时随手记录的画面与文字</p>
+                    </div>
+                </a>
+                <a class="card-link" href="story.html">
+                    <div class="card">
+                        <h3>短篇故事</h3>
+                        <p>伴随旋律诞生的小故事</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <h2>联系</h2>
+            <p>
+                欢迎交流创作，可留言或者私信。<br>
+                保持安静，聆听簌簌飘落的音符。
+            </p>
+        </section>
+
+        <footer>
+            <p>©2026 Melody |♪</p>
+        </footer>
+    </div>
+
+    <script>
+        // 动态随机生成更多音符
+        const container = document.querySelector('.note-container');
+        const notes = ['♪','♫','♩','♬'];
+
+        for (let i = 0; i < 12; i++) {
+        const el = document.createElement('div');
+        el.className = 'note';
+        el.innerText = notes[Math.floor(Math.random() * notes.length)];
+        el.style.left = Math.random() * 95 + "%";
+        el.style.animationDelay = Math.random() * 8 + "s";
+        el.style.animationDuration = (10 + Math.random() * 8) + "s";
+        container.appendChild(el);
+        }
+
+        // 音乐播放控制
+        const bgMusic = document.getElementById('bgMusic');
+        const musicBtn = document.getElementById('musicBtn');
+        const restIcon = document.getElementById('restIcon');
+
+        function toggleMusic(){
+        if (bgMusic.paused) {
+        bgMusic.play();
+        musicBtn.innerText = "♫ 暂停音乐";
+        restIcon.classList.add('playing');
+        restIcon.textContent = '𝄞'; // 播放时换成高音谱号
+        } else {
+        bgMusic.pause();
+        musicBtn.innerText = "♪ 播放音乐";
+        restIcon.classList.remove('playing');
+        restIcon.textContent = '𝄽'; // 暂停时四分休止符
+        }
+        }
+
+        musicBtn.onclick = toggleMusic;
+        restIcon.onclick = toggleMusic;
+    </script>
+
+    <script src="./yzhanweather.min.js"></script>
+    <script>
+        const yzhanweather = new YZhanWeather();
+        yzhanweather.run('snow');
+    </script>
+</body>
+</html>
